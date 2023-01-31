@@ -5,7 +5,7 @@ pub enum Response {
 impl RESPEncoder for Response {
     fn encode(&self) -> Vec<u8> {
         match self {
-            Response::Pong => "+PONG".as_bytes().to_vec()
+            Response::Pong => "+PONG\r\n".as_bytes().to_vec(),
         }
     }
 }
