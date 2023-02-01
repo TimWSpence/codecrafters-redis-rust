@@ -1,15 +1,25 @@
-pub enum Response {
-    Pong,
+pub enum Request {
+    Ping,
 }
 
-impl RESPEncoder for Response {
-    fn encode(&self) -> Vec<u8> {
-        match self {
-            Response::Pong => "+PONG\r\n".as_bytes().to_vec(),
+impl Request {
+    pub fn decode(data: &str) -> Option<Request> {
+        if (data == ("+PING")) {
+            Some(Request::Ping)
+        } else {
+            None
         }
     }
 }
 
-pub trait RESPEncoder {
-    fn encode(&self) -> Vec<u8>;
+pub enum Response {
+    Pong,
+}
+
+impl Response {
+    pub fn encode(&self) -> Vec<u8> {
+        match self {
+            Response::Pong => "+PONG\r\n".as_bytes().to_vec(),
+        }
+    }
 }
