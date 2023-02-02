@@ -1,11 +1,11 @@
-use std::io::{BufRead, Read};
+use std::io::BufRead;
 use std::{io::BufReader, net::TcpStream};
 
-pub enum Request<'a> {
-    Ping { data: Option<&'a str> },
+pub enum Request {
+    Ping { data: Option<String> },
 }
 
-impl<'a> Request<'a> {
+impl Request {
     pub fn decode(reader: &mut BufReader<TcpStream>) -> Option<Request> {
         fn read_bulk_string<'a>(
             reader: &mut BufReader<TcpStream>,
@@ -31,19 +31,22 @@ impl<'a> Request<'a> {
                 }
             }?;
             Some(s)
-        };
+        }
 
         fn parse_ping<'a>(
             reader: &mut BufReader<TcpStream>,
             buf: &'a mut String,
             len: usize,
-        ) -> Option<Request<'a>> {
+        ) -> Option<Request> {
+            //TODO allocate buffer here instead?
             if len == 1 {
                 Some(Request::Ping { data: None })
             } else {
                 buf.clear();
                 let data = read_bulk_string(reader, buf)?;
-                Some(Request::Ping { data: Some(data) })
+                Some(Request::Ping {
+                    data: Some(data.to_string()),
+                })
             }
         }
 
@@ -76,17 +79,5 @@ impl<'a> Request<'a> {
 
     fn decode_usize(data: &str) -> Option<usize> {
         data.parse::<usize>().ok()
-    }
-}
-
-pub enum Response {
-    Pong,
-}
-
-impl Response {
-    pub fn encode(&self) -> Vec<u8> {
-        match self {
-            Response::Pong => "+PONG\r\n".as_bytes().to_vec(),
-        }
     }
 }
