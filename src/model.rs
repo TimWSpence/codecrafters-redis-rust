@@ -76,7 +76,7 @@ impl Request {
                 read_bulk_string(reader, &mut buf)
             }
         }?;
-        match cmd {
+        match cmd.to_uppercase().as_str() {
             "PING" => parse_ping(reader, &mut buf, len),
             _ => None,
         }
