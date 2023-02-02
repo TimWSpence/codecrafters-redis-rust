@@ -55,20 +55,23 @@ impl Request {
             data.parse::<usize>().ok()
         }
 
-        let mut buf = String::new();
-        let len = {
-            let n = reader.read_line(&mut buf).ok()?;
+        fn read_array_length(reader: &mut BufReader<TcpStream>, buf: &mut String) -> Option<usize> {
+            buf.clear();
+            let n = reader.read_line(buf).ok()?;
             if n == 0 {
                 None
             } else {
                 let s = buf.trim_end();
                 if s.starts_with("*") {
-                    decode_usize(&s[1..])
+                    s[1..].parse::<usize>().ok()
                 } else {
                     None
                 }
             }
-        }?;
+        }
+
+        let mut buf = String::new();
+        let len = read_array_length(reader, &mut buf)?;
         let cmd = {
             if len == 0 {
                 None
