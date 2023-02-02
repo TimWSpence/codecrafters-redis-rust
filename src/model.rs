@@ -1,6 +1,7 @@
 use std::io::BufRead;
 use std::{io::BufReader, net::TcpStream};
 
+#[derive(Debug)]
 pub enum Request {
     Ping { data: Option<String> },
 }
@@ -18,13 +19,13 @@ impl Request {
                     None
                 } else {
                     let s = buf.trim_end();
-                    Request::decode_usize(&s[1..])
+                    decode_usize(&s[1..])
                 }
             }?;
             buf.clear();
             let s = {
                 let n = reader.read_line(buf).ok()?;
-                if n != len {
+                if n != (len + 2) {
                     None
                 } else {
                     Some(buf.trim_end())
@@ -50,6 +51,10 @@ impl Request {
             }
         }
 
+        fn decode_usize(data: &str) -> Option<usize> {
+            data.parse::<usize>().ok()
+        }
+
         let mut buf = String::new();
         let len = {
             let n = reader.read_line(&mut buf).ok()?;
@@ -58,7 +63,7 @@ impl Request {
             } else {
                 let s = buf.trim_end();
                 if s.starts_with("*") {
-                    Request::decode_usize(&s[1..])
+                    decode_usize(&s[1..])
                 } else {
                     None
                 }
@@ -75,9 +80,5 @@ impl Request {
             "PING" => parse_ping(reader, &mut buf, len),
             _ => None,
         }
-    }
-
-    fn decode_usize(data: &str) -> Option<usize> {
-        data.parse::<usize>().ok()
     }
 }
