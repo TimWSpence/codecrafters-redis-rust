@@ -4,6 +4,7 @@ use std::{io::BufReader, net::TcpStream};
 #[derive(Debug)]
 pub enum Request {
     Ping { data: Option<String> },
+    Echo { data: String },
 }
 
 impl Request {
@@ -39,7 +40,6 @@ impl Request {
             buf: &'a mut String,
             len: usize,
         ) -> Option<Request> {
-            //TODO allocate buffer here instead?
             if len == 1 {
                 Some(Request::Ping { data: None })
             } else {
@@ -47,6 +47,22 @@ impl Request {
                 let data = read_bulk_string(reader, buf)?;
                 Some(Request::Ping {
                     data: Some(data.to_string()),
+                })
+            }
+        }
+
+        fn parse_echo<'a>(
+            reader: &mut BufReader<TcpStream>,
+            buf: &'a mut String,
+            len: usize,
+        ) -> Option<Request> {
+            if len == 1 {
+                None
+            } else {
+                buf.clear();
+                let data = read_bulk_string(reader, buf)?;
+                Some(Request::Echo {
+                    data: data.to_string(),
                 })
             }
         }
@@ -81,6 +97,7 @@ impl Request {
         }?;
         match cmd.to_uppercase().as_str() {
             "PING" => parse_ping(reader, &mut buf, len),
+            "ECHO" => parse_echo(reader, &mut buf, len),
             _ => None,
         }
     }

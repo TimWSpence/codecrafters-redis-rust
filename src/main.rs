@@ -31,12 +31,14 @@ fn handle_connection(stream: TcpStream) {
     }
 }
 
+//TODO split this out into handlers file
 fn handle_request(req: Request, mut stream: TcpStream) {
     match req {
         Request::Ping { data } => match data {
             Some(d) => stream.write_all(bulk_string(d).as_bytes()).unwrap(),
             _ => stream.write_all(simple_string("PONG").as_bytes()).unwrap(),
         },
+        Request::Echo { data } => stream.write_all(bulk_string(data).as_bytes()).unwrap(),
     };
 }
 
