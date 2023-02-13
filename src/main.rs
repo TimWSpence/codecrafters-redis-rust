@@ -1,10 +1,11 @@
 use std::io::BufReader;
-use std::io::Write;
 use std::net::TcpListener;
 use std::net::TcpStream;
 use std::thread;
 mod model;
 use model::*;
+mod handlers;
+use handlers::*;
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:6379").unwrap();
@@ -29,23 +30,4 @@ fn handle_connection(stream: TcpStream) {
     while let Some(req) = Request::decode(&mut reader) {
         handle_request(req, stream.try_clone().unwrap());
     }
-}
-
-//TODO split this out into handlers file
-fn handle_request(req: Request, mut stream: TcpStream) {
-    match req {
-        Request::Ping { data } => match data {
-            Some(d) => stream.write_all(bulk_string(d).as_bytes()).unwrap(),
-            _ => stream.write_all(simple_string("PONG").as_bytes()).unwrap(),
-        },
-        Request::Echo { data } => stream.write_all(bulk_string(data).as_bytes()).unwrap(),
-    };
-}
-
-fn simple_string(s: &str) -> String {
-    format!("+{}\r\n", s)
-}
-
-fn bulk_string(s: String) -> String {
-    format!("${}\r\n{}\r\n", s.len(), s)
 }
