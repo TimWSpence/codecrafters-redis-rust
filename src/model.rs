@@ -1,10 +1,16 @@
+use std::collections::HashMap;
 use std::io::BufRead;
+use std::sync::{Arc, Mutex};
 use std::{io::BufReader, net::TcpStream};
+
+pub type Store = Arc<Mutex<HashMap<String, String>>>;
 
 #[derive(Debug)]
 pub enum Request {
     Ping { data: Option<String> },
     Echo { data: String },
+    Get { key: String },
+    Set { key: String, value: String },
 }
 
 impl Request {
@@ -67,6 +73,47 @@ impl Request {
             }
         }
 
+        fn parse_get<'a>(
+            reader: &mut BufReader<TcpStream>,
+            buf: &'a mut String,
+            len: usize,
+        ) -> Option<Request> {
+            if len == 1 {
+                None
+            } else {
+                buf.clear();
+                let key = read_bulk_string(reader, buf)?;
+                Some(Request::Get {
+                    key: key.to_string(),
+                })
+            }
+        }
+
+        fn parse_set<'a>(
+            reader: &mut BufReader<TcpStream>,
+            buf: &'a mut String,
+            len: usize,
+        ) -> Option<Request> {
+            if len == 1 {
+                None
+            } else {
+                let key = {
+                    buf.clear();
+                    let s = read_bulk_string(reader, buf)?;
+                    s.to_string()
+                };
+                let value = {
+                    buf.clear();
+                    let s = read_bulk_string(reader, buf)?;
+                    s.to_string()
+                };
+                Some(Request::Set {
+                    key: key.to_string(),
+                    value: value.to_string(),
+                })
+            }
+        }
+
         fn decode_usize(data: &str) -> Option<usize> {
             data.parse::<usize>().ok()
         }
@@ -98,6 +145,8 @@ impl Request {
         match cmd.to_uppercase().as_str() {
             "PING" => parse_ping(reader, &mut buf, len),
             "ECHO" => parse_echo(reader, &mut buf, len),
+            "GET" => parse_get(reader, &mut buf, len),
+            "SET" => parse_set(reader, &mut buf, len),
             _ => None,
         }
     }
