@@ -1,16 +1,32 @@
 use std::collections::HashMap;
 use std::io::BufRead;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use std::{io::BufReader, net::TcpStream};
 
-pub type Store = Arc<Mutex<HashMap<String, String>>>;
+pub type Store = Arc<Mutex<HashMap<String, StoreEntry>>>;
+
+pub struct StoreEntry {
+    pub value: String,
+    pub expiry: Option<Duration>,
+}
 
 #[derive(Debug)]
 pub enum Request {
-    Ping { data: Option<String> },
-    Echo { data: String },
-    Get { key: String },
-    Set { key: String, value: String },
+    Ping {
+        data: Option<String>,
+    },
+    Echo {
+        data: String,
+    },
+    Get {
+        key: String,
+    },
+    Set {
+        key: String,
+        value: String,
+        expiry: Option<u64>,
+    },
 }
 
 impl Request {
@@ -94,7 +110,7 @@ impl Request {
             buf: &'a mut String,
             len: usize,
         ) -> Option<Request> {
-            if len == 1 {
+            if len != 3 && len != 5 {
                 None
             } else {
                 let key = {
@@ -107,10 +123,31 @@ impl Request {
                     let s = read_bulk_string(reader, buf)?;
                     s.to_string()
                 };
-                Some(Request::Set {
-                    key: key.to_string(),
-                    value: value.to_string(),
-                })
+                if len == 3 {
+                    Some(Request::Set {
+                        key: key.to_string(),
+                        value: value.to_string(),
+                        expiry: None,
+                    })
+                } else {
+                    //TODO parse expiry
+                    {
+                        buf.clear();
+                        let s = read_bulk_string(reader, buf)?;
+                        assert!(s == "PX");
+                    };
+                    let expiry = {
+                        buf.clear();
+                        let s = read_bulk_string(reader, buf)?;
+                        s.to_string()
+                    };
+                    let expiry = expiry.parse::<u64>().unwrap();
+                    Some(Request::Set {
+                        key: key.to_string(),
+                        value: value.to_string(),
+                        expiry: Some(expiry),
+                    })
+                }
             }
         }
 
