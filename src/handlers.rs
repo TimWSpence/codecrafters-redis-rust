@@ -34,7 +34,7 @@ fn handle_get(key: String, store: Store, mut stream: TcpStream) {
 fn handle_set(key: String, value: String, store: Store, mut stream: TcpStream) {
     let mut store = store.lock().unwrap();
     store.insert(key, value);
-    stream.write_all(simple_string("Ok").as_bytes()).unwrap();
+    stream.write_all(simple_string("OK").as_bytes()).unwrap();
 }
 
 fn simple_string(s: &str) -> String {
