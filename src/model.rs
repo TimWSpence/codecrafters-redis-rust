@@ -134,8 +134,7 @@ impl Request {
                     {
                         buf.clear();
                         let s = read_bulk_string(reader, buf)?;
-                        println!("{} should be PX", s);
-                        assert!(s == "PX");
+                        assert!(s.to_uppercase() == "PX");
                     };
                     let expiry = {
                         buf.clear();
