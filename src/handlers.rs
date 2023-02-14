@@ -31,7 +31,7 @@ fn handle_get(key: String, store: Store, mut stream: TcpStream) {
             Some(t) => {
                 let current = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
                 if current > *t {
-                    stream.write_all(nil()).unwrap()
+                    stream.write_all(NIL).unwrap()
                 } else {
                     stream.write_all(bulk_string(&e.value).as_bytes()).unwrap()
                 }
@@ -39,7 +39,7 @@ fn handle_get(key: String, store: Store, mut stream: TcpStream) {
             _ => stream.write_all(bulk_string(&e.value).as_bytes()).unwrap(),
         },
 
-        _ => stream.write_all(nil()).unwrap(),
+        _ => stream.write_all(NIL).unwrap(),
     }
 }
 
@@ -71,6 +71,4 @@ fn bulk_string(s: &String) -> String {
     format!("${}\r\n{}\r\n", s.len(), s)
 }
 
-fn nil() -> &'static [u8] {
-    "$-1\r\n".as_bytes()
-}
+const NIL: &'static [u8] = "$-1\r\n".as_bytes();
