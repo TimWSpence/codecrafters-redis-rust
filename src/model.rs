@@ -57,9 +57,9 @@ impl Request {
             Some(s)
         }
 
-        fn parse_ping<'a>(
+        fn parse_ping(
             reader: &mut BufReader<TcpStream>,
-            buf: &'a mut String,
+            buf: &mut String,
             len: usize,
         ) -> Option<Request> {
             if len == 1 {
@@ -73,9 +73,9 @@ impl Request {
             }
         }
 
-        fn parse_echo<'a>(
+        fn parse_echo(
             reader: &mut BufReader<TcpStream>,
-            buf: &'a mut String,
+            buf: &mut String,
             len: usize,
         ) -> Option<Request> {
             if len == 1 {
@@ -89,9 +89,9 @@ impl Request {
             }
         }
 
-        fn parse_get<'a>(
+        fn parse_get(
             reader: &mut BufReader<TcpStream>,
-            buf: &'a mut String,
+            buf: &mut String,
             len: usize,
         ) -> Option<Request> {
             if len == 1 {
@@ -105,9 +105,9 @@ impl Request {
             }
         }
 
-        fn parse_set<'a>(
+        fn parse_set(
             reader: &mut BufReader<TcpStream>,
-            buf: &'a mut String,
+            buf: &mut String,
             len: usize,
         ) -> Option<Request> {
             if len != 3 && len != 5 {
@@ -162,8 +162,8 @@ impl Request {
                 None
             } else {
                 let s = buf.trim_end();
-                if s.starts_with("*") {
-                    s[1..].parse::<usize>().ok()
+                if let Some(s) = s.strip_prefix('*') {
+                    s.parse::<usize>().ok()
                 } else {
                     None
                 }

@@ -20,7 +20,7 @@ fn main() {
                 thread::spawn(|| {
                     handle_connection(store, _stream);
                 });
-                ()
+                
             }
             Err(e) => {
                 println!("error: {}", e);

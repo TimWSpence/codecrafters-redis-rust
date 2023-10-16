@@ -71,4 +71,4 @@ fn bulk_string(s: &String) -> String {
     format!("${}\r\n{}\r\n", s.len(), s)
 }
 
-const NIL: &'static [u8] = "$-1\r\n".as_bytes();
+const NIL: &[u8] = "$-1\r\n".as_bytes();
